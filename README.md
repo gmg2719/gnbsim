@@ -1,1 +1,1 @@
-# gnb-sim
+# ran-sim-5gsa

@@ -266,7 +266,7 @@ func TestOctetString(t *testing.T) {
 	pv, plen, v, err = EncOctetString(in, min, max, false)
 	expectplen := 0
 	if compareSlice(pexpect, pv) == false || plen != expectplen ||
-	   compareSlice(expect, v) == false {
+		compareSlice(expect, v) == false {
 		t.Errorf("plen expect: %d, actual %d", expectplen, plen)
 		t.Errorf("value pexpect: 0x%02x, actual 0x%02x", pexpect, pv)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
@@ -280,7 +280,7 @@ func TestOctetString(t *testing.T) {
 	pv, plen, v, err = EncOctetString(in, min, max, true)
 	expectplen = 17
 	if compareSlice(pexpect, pv) == false || plen != expectplen ||
-	   compareSlice(expect, v) == false {
+		compareSlice(expect, v) == false {
 		t.Errorf("plen expect: %d, actual %d", expectplen, plen)
 		t.Errorf("value pexpect: 0x%02x, actual 0x%02x", pexpect, pv)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
@@ -294,7 +294,7 @@ func TestOctetString(t *testing.T) {
 	pv, plen, v, err = EncOctetString(in, min, max, true)
 	expectplen = 1
 	if compareSlice(pexpect, pv) == false || plen != expectplen ||
-	   compareSlice(expect, v) == false {
+		compareSlice(expect, v) == false {
 		t.Errorf("plen expect: %d, actual %d", expectplen, plen)
 		t.Errorf("value pexpect: 0x%02x, actual 0x%02x", pexpect, pv)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
@@ -308,7 +308,7 @@ func TestOctetString(t *testing.T) {
 	pv, plen, v, err = EncOctetString(in, min, max, true)
 	expectplen = 5
 	if compareSlice(pexpect, pv) == false || plen != expectplen ||
-	   compareSlice(expect, v) == false {
+		compareSlice(expect, v) == false {
 		t.Errorf("plen expect: %d, actual %d", expectplen, plen)
 		t.Errorf("value pexpect: 0x%02x, actual 0x%02x", pexpect, pv)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)

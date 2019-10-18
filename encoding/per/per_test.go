@@ -31,7 +31,7 @@ func TestMergeBitField(t *testing.T) {
 
 	/* XXX need to fix here */
 	in1 = []uint8{0x80, 0x80} //b1000 0000 1000 0000
-	in2 = []uint8{0x00, 0x11} //b0000 0000 0001 0001
+	in2 = []uint8{0x08, 0x80} //b0000 1000 1000 0000
 	out, outlen = MergeBitField(in1, 9, in2, 9)
 	expect = []uint8{0x80, 0x84, 0x40} //b1000 0000 1000 0100 01xx xxxx
 	expectlen = 18
@@ -117,9 +117,9 @@ func TestEncInteger(t *testing.T) {
 	}
 
 	v, bitlen, err = EncInteger(1, 0, 7, true)
-	expect = []uint8{0x01}
+	expect = []uint8{0x08}
 	if bitlen != 5 || compareSlice(expect, v) == false {
-		t.Errorf("bitlen expect: %d, actual %d", 4, bitlen)
+		t.Errorf("bitlen expect: %d, actual %d", 5, bitlen)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
 	}
 
@@ -147,14 +147,14 @@ func TestEncEnumerated(t *testing.T) {
 	}
 
 	v, bitlen, err = EncEnumerated(2, 0, 2, false)
-	expect := []uint8{0x02}
+	expect := []uint8{0x80}
 	if bitlen != 2 || compareSlice(expect, v) == false {
 		t.Errorf("bitlen expect: %d, actual %d", 2, bitlen)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
 	}
 
 	v, bitlen, err = EncEnumerated(1, 0, 2, true)
-	expect = []uint8{0x01}
+	expect = []uint8{0x20}
 	if bitlen != 3 || compareSlice(expect, v) == false {
 		t.Errorf("bitlen expect: %d, actual %d", 3, bitlen)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
@@ -222,27 +222,31 @@ func TestBitString(t *testing.T) {
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
 	}
 
-	in = []uint8{0x00, 0x00}
+	in = []uint8{0x00, 0x10}
 	v, bitlen, err = EncBitString(in, 16, 0, 255, false)
-	expect = []uint8{0x10, 0x00, 0x00}
+	expect = []uint8{0x10, 0x00, 0x10}
 	expectlen := 24
 	if bitlen != expectlen || compareSlice(expect, v) == false {
 		t.Errorf("bitlen expect: %d, actual %d", expectlen, bitlen)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
 	}
 
-	in = []uint8{0x00, 0x00, 0x00}
+	in = []uint8{0x00, 0x00, 0x02}
+	//b x000 0000 0000 0000 0000 0010
 	v, bitlen, err = EncBitString(in, 23, 22, 32, false)
-	expect = []uint8{0x00, 0x80, 0x00, 0x00}
+	expect = []uint8{0x10, 0x00, 0x00, 0x40}
+	//b 0001 0000 0000 0000 0000 0000 010x xxxx
 	expectlen = 27
 	if bitlen != expectlen || compareSlice(expect, v) == false {
 		t.Errorf("bitlen expect: %d, actual %d", expectlen, bitlen)
 		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
 	}
 
-	in = []uint8{0x00, 0x00, 0x00, 0x00}
+	in = []uint8{0x00, 0x00, 0x00, 0x03}
+	//b xxxx xxx0 0000 0000 0000 0000 0000 0011
 	v, bitlen, err = EncBitString(in, 25, 22, 32, false)
-	expect = []uint8{0x06, 0x00, 0x00, 0x00}
+	expect = []uint8{0x30, 0x00, 0x00, 0x18}
+	//b 0011  0000 0000 0000 0000 0000 0001 1xxx
 	expectlen = 29
 	if bitlen != expectlen || compareSlice(expect, v) == false {
 		t.Errorf("bitlen expect: %d, actual %d", expectlen, bitlen)
@@ -303,7 +307,7 @@ func TestOctetString(t *testing.T) {
 	min = 0
 	max = 7
 	in = make([]uint8, 3, 3)
-	pexpect = []uint8{0x03}
+	pexpect = []uint8{0x18}
 	expect = in
 	pv, plen, v, err = EncOctetString(in, min, max, true)
 	expectplen = 5

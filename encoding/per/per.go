@@ -20,20 +20,18 @@ func MergeBitField(in1 []uint8, inlen1 int, in2 []uint8, inlen2 int) (
 
 	   ex2.
 	   in1(len=4)  b1010 xxxx
-	   in2(len=14) bxx11 1010 1111 0000
+	   in2(len=14) b1110 1011 1100 00xx
 	   out(len=18) b1010 1110 1011 1100 00xx
 	*/
 
 	if in1 == nil {
-		out = in2
-		outlen = inlen2
-		out = ShiftLeft(out, len(in2)*8-inlen2)
+		out, outlen = ShiftLeftMost(in2, inlen2)
 		return
 	}
 
 	out = make([]uint8, len(in1), len(in1))
 	out = append(out, in2...)
-	out = ShiftLeft(out, len(in2)*8-inlen2+len(in1)*8-inlen1)
+	out = ShiftLeft(out, len(in1)*8-inlen1)
 	for n := 0; n < len(in1); n++ {
 		out[n] |= in1[n]
 	}
@@ -87,6 +85,14 @@ func ShiftRight(in []uint8, shiftlen int) (out []uint8) {
 			}
 		}
 	}
+	return
+}
+
+// ShiftLeftMost is utility function to shift the octet values to the leftmost.
+func ShiftLeftMost(in []uint8, inlen int) (out []uint8, outlen int) {
+	out = in
+	outlen = inlen
+	out = ShiftLeft(out, len(in)*8-inlen)
 	return
 }
 
@@ -148,6 +154,7 @@ func encConstrainedWholeNumberWithExtmark(input, min, max int, extmark bool) (
 			bitlen++
 		}
 	}
+	ShiftLeftMost(v, bitlen)
 	return
 }
 
@@ -205,8 +212,7 @@ func EncBitString(input []uint8, inputlen, min, max int, extmark bool) (
 		return
 	}
 
-	v = input
-	bitlen = inputlen
+	v, bitlen = ShiftLeftMost(input, inputlen)
 
 	if min == max {
 		// fixed length case. not implemented yet.
@@ -218,43 +224,10 @@ func EncBitString(input []uint8, inputlen, min, max int, extmark bool) (
 	}
 
 	// range is constrained whole number.
-	vext, bitlenext, errext :=
-		encConstrainedWholeNumberWithExtmark(inputlen,
-			min, max, extmark)
-	if errext != nil {
-		err = fmt.Errorf("EncBitString: unexpected error.")
-		return
-	}
+	pv, plen, _ := encConstrainedWholeNumberWithExtmark(inputlen,
+		min, max, extmark)
 
-	if bitlen%8 == 0 {
-		bitlen += bitlenext
-		v = append(vext, v...)
-		return
-	}
-
-	//fmt.Printf("dbg1: vext:0x%02x, bitlenext:%v\n", vext, bitlenext)
-	/*
-	 * bitlen => 14
-	 * bitlen % 8 => 6
-	 * need to shift 2 bit => 8 - (bitlen % 8)
-	 * v =      b0011 1010 1100 0101
-	 *             ^
-	 * extmark len = 4
-	 * v = b0010 1011 1010 1100 0101
-	 *        ^
-	 */
-	vext = append(vext, []uint8{0x00}...)
-	shiftlen := 8 - (bitlen % 8)
-	//fmt.Printf("dbg2: vext:0x%02x, bitlenext:%v\n", vext, bitlenext)
-	vext = ShiftRight(vext, shiftlen)
-	v[0] |= vext[len(vext)-1]
-	vext = vext[:len(vext)-1]
-	if shiftlen >= bitlenext {
-		vext = vext[1:]
-	}
-
-	bitlen += bitlenext
-	v = append(vext, v...)
+	v, bitlen = MergeBitField(pv, plen, v, bitlen)
 	return
 }
 
@@ -276,14 +249,6 @@ func EncOctetString(input []uint8, min, max int, extmark bool) (
 		return
 	}
 
-	/*
-		if min == max && min != inputlen {
-			err = fmt.Errorf("EncOctetString: "+
-				"input len(value)=%d must be %d", inputlen, min)
-			return
-		}
-	*/
-
 	v = input
 	plen = 0
 
@@ -302,6 +267,7 @@ func EncOctetString(input []uint8, min, max int, extmark bool) (
 		case min < 65537:
 			plen = 1
 		}
+		pv, plen = ShiftLeftMost(pv, plen)
 		return
 	}
 
@@ -320,7 +286,7 @@ func EncOctetString(input []uint8, min, max int, extmark bool) (
 // EncSequence return Sequence Preamble but it just returns 0x00 for now.
 // 18. Encoding the sequence type
 func EncSequence(extmark bool, optnum int, optflag uint) (
-	v []uint8, bitlen int, err error) {
+	pv []uint8, plen int, err error) {
 	if optnum > 7 {
 		err = fmt.Errorf("EncSequence: "+
 			"optnum=%d is not implemented yet. (should be < 8)",
@@ -328,11 +294,12 @@ func EncSequence(extmark bool, optnum int, optflag uint) (
 		return
 	}
 	if extmark == true {
-		bitlen++
+		plen++
 	}
-	bitlen += optnum
-	v = make([]uint8, 1, 1)
-	v[0] |= uint8(optflag)
+	plen += optnum
+	pv = make([]uint8, 1, 1)
+	pv[0] |= uint8(optflag)
+	pv, plen = ShiftLeftMost(pv, plen)
 	return
 }
 
@@ -343,7 +310,8 @@ var EncSequenceOf = EncEnumerated
 // EncChoice is the implementation for
 // 22. Encoding the choice type
 func EncChoice(input, min, max int, extmark bool) (
-	v []uint8, bitlen int, err error) {
-	v, bitlen, err = EncInteger(input, min, max, extmark)
+	pv []uint8, plen int, err error) {
+	pv, plen, err = EncInteger(input, min, max, extmark)
+	pv, plen = ShiftLeftMost(pv, plen)
 	return
 }

@@ -253,29 +253,28 @@ func EncOctetString(input []uint8, min, max int, extmark bool) (
 		return
 	}
 
-	v = input
-	plen = 0
-
 	if min == max {
-		if extmark == false {
-			return
-		}
-
-		pv = []uint8{0x00}
-
 		switch {
 		case min < 3:
-			pv = append(pv, v...)
-			plen = inputlen*8 + 1
-			v = []uint8{}
+			pv = input
+			plen = inputlen * 8
+			if extmark == true {
+				pv = append([]uint8{0x00}, pv...)
+				plen++
+			}
+			pv, plen = ShiftLeftMost(pv, plen)
 		case min < 65537:
-			plen = 1
+			v = input
+			if extmark == true {
+				pv = []uint8{0x00}
+				plen = 1
+				pv, plen = ShiftLeftMost(pv, plen)
+			}
 		}
-		pv, plen = ShiftLeftMost(pv, plen)
 		return
 	}
 
-	// range is constrained whole number.
+	v = input
 	pv, plen, perr :=
 		encConstrainedWholeNumberWithExtmark(inputlen,
 			min, max, extmark)
@@ -300,6 +299,8 @@ func EncSequence(extmark bool, optnum int, optflag uint) (
 	if extmark == true {
 		plen++
 	}
+
+	pv = make([]uint8, 1, 1)
 	plen += optnum
 	pv = make([]uint8, 1, 1)
 	pv[0] |= uint8(optflag)

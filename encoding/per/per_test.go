@@ -278,8 +278,9 @@ func TestOctetString(t *testing.T) {
 
 	min = 2
 	max = 2
-	in = make([]uint8, max, max)
-	pexpect = []uint8{0x00, 0x00, 0x00}
+	//in = make([]uint8, max, max)
+	in = []uint8{0x01, 0x80}
+	pexpect = []uint8{0x00, 0xc0, 0x00}
 	expect = []uint8{}
 	pv, plen, v, err = EncOctetString(in, min, max, true)
 	expectplen = 17

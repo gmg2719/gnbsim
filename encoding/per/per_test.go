@@ -92,6 +92,38 @@ func TestEncConstrainedWholeNumber(t *testing.T) {
 	}
 }
 
+// 10.9
+func TestEncLengthDeterminant(t *testing.T) {
+	v, bitlen, _ := EncLengthDeterminant(1, 255)
+	expect := []uint8{0x01}
+	expectlen := 8
+	if bitlen != expectlen || compareSlice(expect, v) == false {
+		t.Errorf("bitlen expect: %d, actual %d", expectlen, bitlen)
+		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
+	}
+
+	v, bitlen, _ = EncLengthDeterminant(1, 0)
+	expect = []uint8{0x01}
+	expectlen = 0
+	if bitlen != expectlen || compareSlice(expect, v) == false {
+		t.Errorf("bitlen expect: %d, actual %d", expectlen, bitlen)
+		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
+	}
+
+	v, bitlen, _ = EncLengthDeterminant(16383, 0)
+	expect = []uint8{0xbf, 0xff}
+	expectlen = 0
+	if bitlen != expectlen || compareSlice(expect, v) == false {
+		t.Errorf("bitlen expect: %d, actual %d", expectlen, bitlen)
+		t.Errorf("value expect: 0x%02x, actual 0x%02x", expect, v)
+	}
+
+	v, bitlen, err := EncLengthDeterminant(16384, 0)
+	if err == nil {
+		t.Errorf("EncLengthDeterminant: unexpected error")
+	}
+}
+
 // 12
 func TestEncInteger(t *testing.T) {
 	v, bitlen, err := EncInteger(3, 0, 2, true)

@@ -143,6 +143,31 @@ func EncConstrainedWholeNumber(input, min, max int) (
 	return
 }
 
+// EncLengthDeterminant is the implementation for
+// 10.9 General rules for encoding a length determinant
+func EncLengthDeterminant(input, max int) (
+	v []uint8, bitlen int, err error) {
+
+	if max != 0 && max < 65536 {
+		v, bitlen, err = EncConstrainedWholeNumber(input, 0, max)
+		return
+	}
+
+	switch {
+	case input < 128:
+		v = append(v, uint8(input))
+		return
+	case input < 16384:
+		v = append(v, uint8((input>>8)&0xff))
+		v = append(v, uint8(input&0xff))
+		v[0] |= 0x80
+		return
+	}
+	err = fmt.Errorf("EncLengthDeterminant: "+
+		"not implemented yet for input=%d, max=%d", input, max)
+	return
+}
+
 func encConstrainedWholeNumberWithExtmark(input, min, max int, extmark bool) (
 	v []uint8, bitlen int, err error) {
 	v, bitlen, err = EncConstrainedWholeNumber(input, min, max)
